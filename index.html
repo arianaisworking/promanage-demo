@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ProManage — Powered by DRC</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{background:#F0F4F8;font-family:"Inter",sans-serif;}
+    input:focus,select:focus,textarea:focus{outline:none;border-color:#2563EB!important;box-shadow:0 0 0 3px rgba(37,99,235,0.12);}
+    button{transition:all 0.12s;cursor:pointer;font-family:"Inter",sans-serif;}
+    button:active{transform:scale(0.97);}
+    ::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-thumb{background:#BFDBFE;border-radius:4px;}
+
+    .layout{display:flex;min-height:100vh;}
+    .sidebar{width:220px;min-width:220px;background:#0F172A;border-right:1px solid #1E293B;display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:100;overflow-y:auto;transition:transform .25s ease;}
+    .sidebar-logo{padding:1.1rem 1rem .9rem;border-bottom:1px solid #1E293B;display:flex;align-items:center;gap:.65rem;}
+    .sidebar-logo-mark{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#2563EB,#0EA5E9);display:flex;align-items:center;justify-content:center;font-family:"Plus Jakarta Sans",sans-serif;font-weight:800;font-size:.95rem;color:#fff;flex-shrink:0;}
+    .sidebar-logo-name{font-family:"Plus Jakarta Sans",sans-serif;font-size:.88rem;font-weight:800;color:#F8FAFC;display:block;line-height:1.1;}
+    .sidebar-logo-sub{font-size:.55rem;color:#475569;text-transform:uppercase;letter-spacing:.1em;display:block;}
+    .sidebar-stats{padding:.6rem 1rem;border-bottom:1px solid #1E293B;display:grid;grid-template-columns:1fr 1fr;gap:.25rem .5rem;}
+    .s-stat{display:flex;flex-direction:column;}
+    .s-stat-l{font-size:.55rem;color:#475569;text-transform:uppercase;letter-spacing:.07em;}
+    .s-stat-v{font-family:"Plus Jakarta Sans",sans-serif;font-size:.85rem;font-weight:800;color:#60A5FA;}
+    .sidebar-section{font-size:.52rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#334155;padding:.7rem 1rem .2rem;}
+    .sidebar-item{display:flex;align-items:center;gap:.6rem;padding:.5rem 1rem;margin:0 .4rem .03rem;border-radius:9px;cursor:pointer;transition:all .15s;border:1px solid transparent;}
+    .sidebar-item:hover{background:#1E293B;}
+    .sidebar-item.act{background:#1E3A5F;border-color:#2563EB;}
+    .sidebar-icon{font-size:.9rem;width:16px;text-align:center;flex-shrink:0;}
+    .sidebar-label{font-size:.78rem;font-weight:500;color:#94A3B8;}
+    .sidebar-item.act .sidebar-label{color:#93C5FD;font-weight:700;}
+    .sidebar-badge{margin-left:auto;background:#2563EB;color:#fff;border-radius:20px;padding:1px 6px;font-size:.55rem;font-weight:700;}
+    .sidebar-bottom{margin-top:auto;padding:.7rem 1rem;border-top:1px solid #1E293B;}
+    .sidebar-url{font-size:.58rem;color:#334155;}
+    .main-area{margin-left:220px;flex:1;display:flex;flex-direction:column;min-height:100vh;}
+    .topbar{background:#fff;border-bottom:1px solid #E2E8F0;padding:.7rem 1.5rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;box-shadow:0 1px 3px rgba(0,0,0,0.05);}
+    .topbar-title{font-family:"Plus Jakarta Sans",sans-serif;font-size:1.05rem;font-weight:800;color:#0F172A;}
+    .topbar-chips{display:flex;gap:.4rem;align-items:center;}
+    .t-chip{background:#EFF6FF;border:1px solid #BFDBFE;border-radius:20px;padding:3px 9px;font-size:.62rem;color:#3B82F6;}
+    .t-chip span{color:#1D4ED8;font-weight:700;}
+    .content{flex:1;padding:1.25rem 1.5rem;overflow-y:auto;}
+    .hbtn{display:none;background:none;border:none;color:#64748B;cursor:pointer;font-size:1.1rem;padding:.2rem .4rem;}
+    .soverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:99;}
+    .soverlay.show{display:block;}
+
+    /* STATUS CHIPS */
+    .status-chip{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;font-size:.72rem;font-weight:700;letter-spacing:.02em;}
+    .sc-new{background:#DBEAFE;color:#1E40AF;}
+    .sc-assigned{background:#FEF9C3;color:#92400E;}
+    .sc-progress{background:#FEF3C7;color:#D97706;}
+    .sc-completed{background:#D1FAE5;color:#065F46;}
+    .sc-paid{background:#DCFCE7;color:#15803D;}
+    .sc-invoice{background:#EDE9FE;color:#6D28D9;}
+    .sc-correction{background:#FEE2E2;color:#B91C1C;}
+
+    /* JOB TICKET CARD */
+    .ticket{background:#fff;border-radius:14px;border:1px solid #E2E8F0;box-shadow:0 2px 8px rgba(0,0,0,0.05);margin-bottom:.65rem;overflow:hidden;}
+    .ticket-bar{height:4px;width:100%;}
+    .ticket-body{padding:.85rem 1rem;}
+    .ticket-wo{font-family:"Plus Jakarta Sans",sans-serif;font-size:.75rem;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.18rem;}
+    .ticket-address{font-size:.95rem;font-weight:700;color:#0F172A;margin-bottom:.3rem;line-height:1.3;}
+    .ticket-meta{display:flex;gap:.75rem;flex-wrap:wrap;margin-bottom:.5rem;}
+    .ticket-meta-item{font-size:.76rem;color:#64748B;}
+    .ticket-meta-item strong{color:#334155;font-weight:600;}
+    .ticket-actions{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.55rem;padding-top:.55rem;border-top:1px solid #F1F5F9;}
+    .ta-btn{display:flex;align-items:center;gap:.3rem;padding:8px 13px;border-radius:8px;font-size:.76rem;font-weight:700;border:1.5px solid transparent;cursor:pointer;white-space:nowrap;}
+    .ta-primary{background:linear-gradient(135deg,#2563EB,#0EA5E9);color:#fff;border-color:transparent;}
+    .ta-green{background:#F0FDF4;color:#166534;border-color:#86EFAC;}
+    .ta-blue{background:#EFF6FF;color:#1D4ED8;border-color:#BFDBFE;}
+    .ta-gray{background:#F8FAFC;color:#475569;border-color:#E2E8F0;}
+    .ta-red{background:#FEF2F2;color:#B91C1C;border-color:#FECACA;}
+    .ta-purple{background:#F5F3FF;color:#6D28D9;border-color:#DDD6FE;}
+    @media(max-width:768px){
+      .sidebar{transform:translateX(-100%);}
+      .sidebar.open{transform:translateX(0);}
+      .main-area{margin-left:0;padding-bottom:64px;}
+      .hbtn{display:block;}
+      .content{padding:.75rem;}
+      .topbar{padding:.6rem .85rem;}
+      .ticket-actions{display:grid;grid-template-columns:1fr 1fr;gap:.35rem;}
+      .ta-btn{justify-content:center;padding:10px 8px;font-size:.74rem;}
+    }
+
+    /* MOBILE BOTTOM NAV */
+    .m-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:#0F172A;border-top:1px solid #1E293B;z-index:200;transition:transform .25s ease;}
+    .m-nav-inner{display:flex;justify-content:space-around;}
+    .m-nav-btn{display:flex;flex-direction:column;align-items:center;gap:2px;padding:.5rem .3rem;border:none;background:none;flex:1;cursor:pointer;position:relative;-webkit-tap-highlight-color:transparent;}
+    .m-nav-btn .mi{font-size:1.25rem;line-height:1;}
+    .m-nav-btn .ml{font-size:.5rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.04em;}
+    .m-nav-btn.act .ml{color:#60A5FA;}
+    .m-badge{position:absolute;top:3px;right:50%;transform:translateX(10px);background:#EF4444;color:#fff;border-radius:20px;padding:0 4px;font-size:.48rem;font-weight:800;min-width:14px;text-align:center;}
+    @media(max-width:768px){.m-nav{display:block;}}
+
+    /* MODAL BOTTOM SHEET */
+    .modal-bg{position:fixed;inset:0;background:rgba(15,23,42,0.55);z-index:1000;display:flex;align-items:flex-end;justify-content:center;backdrop-filter:blur(3px);}
+    .modal-sheet{background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:680px;max-height:93vh;overflow-y:auto;box-shadow:0 -8px 40px rgba(0,0,0,0.12);}
+    .modal-handle{width:36px;height:4px;background:#E2E8F0;border-radius:4px;margin:.7rem auto .2rem;}
+    .modal-header{padding:.75rem 1.2rem .75rem;border-bottom:1px solid #F1F5F9;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:#fff;z-index:1;}
+    .modal-title{font-family:"Plus Jakarta Sans",sans-serif;font-size:.98rem;font-weight:800;color:#0F172A;}
+    .modal-close{background:#F1F5F9;border:none;border-radius:50%;width:28px;height:28px;color:#64748B;font-size:.8rem;font-weight:800;display:flex;align-items:center;justify-content:center;}
+    .modal-body{padding:1rem 1.2rem 2rem;}
+
+    /* ACCORDION */
+    .acc{border:1px solid #E2E8F0;border-radius:12px;margin-bottom:.5rem;overflow:hidden;}
+    .acc-hd{display:flex;justify-content:space-between;align-items:center;padding:.7rem .9rem;cursor:pointer;background:#F8FAFC;user-select:none;}
+    .acc-title{font-size:.82rem;font-weight:700;color:#0F172A;}
+    .acc-sub{font-size:.68rem;color:#64748B;margin-top:1px;}
+    .acc-body{padding:.75rem .9rem;border-top:1px solid #F1F5F9;}
+
+    /* FORM ELEMENTS */
+    .f-label{font-size:.65rem;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:.2rem;}
+    .f-input{width:100%;padding:.5rem .75rem;border-radius:8px;border:1.5px solid #E2E8F0;font-size:.84rem;color:#0F172A;background:#F8FAFC;font-family:"Inter",sans-serif;margin-bottom:.65rem;}
+    .f-input:focus{outline:none;border-color:#2563EB;box-shadow:0 0 0 3px rgba(37,99,235,0.1);}
+    textarea.f-input{min-height:72px;resize:vertical;}
+    .f-row{display:grid;grid-template-columns:1fr 1fr;gap:0 .75rem;}
+
+    /* SECTION HEADER */
+    .sec-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:.85rem;}
+    .sec-title{font-family:"Plus Jakarta Sans",sans-serif;font-size:1.05rem;font-weight:800;color:#0F172A;}
+    .sec-sub{font-size:.72rem;color:#64748B;margin-top:1px;}
+
+    /* PILL FILTER */
+    .pill{padding:5px 13px;border-radius:20px;font-size:.72rem;font-weight:600;cursor:pointer;border:1.5px solid #E2E8F0;background:#fff;color:#64748B;white-space:nowrap;}
+    .pill.act{background:#2563EB;border-color:#2563EB;color:#fff;}
+
+    /* SEARCH BAR */
+    .search-bar{width:100%;padding:.55rem .85rem .55rem 2.2rem;border-radius:10px;border:1.5px solid #E2E8F0;font-size:.84rem;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E") no-repeat .7rem center;color:#0F172A;font-family:"Inter",sans-serif;margin-bottom:.75rem;}
+    .search-bar:focus{outline:none;border-color:#2563EB;}
+
+    /* SMS MODAL */
+    .sms-bubble{padding:.6rem .85rem;border-radius:12px;font-size:.82rem;line-height:1.45;max-width:85%;margin-bottom:.4rem;}
+    .sms-out{background:#2563EB;color:#fff;margin-left:auto;border-radius:12px 12px 2px 12px;}
+    .sms-in{background:#F1F5F9;color:#0F172A;border-radius:12px 12px 12px 2px;}
+
+    /* INTEGRATION BADGES */
+    .int-badge{display:flex;align-items:center;gap:.5rem;padding:.55rem .85rem;border-radius:10px;border:1.5px solid #E2E8F0;background:#fff;font-size:.75rem;font-weight:600;color:#334155;}
+    .int-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+    @keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+<script type="text/babel">
+const {useState,useEffect,useRef,useCallback}=React;
+
+// ─── DEMO DATA ────────────────────────────────────────────────
+const VENDOR_COLORS={"Apex Plumbing":"#2563EB","TrueLevel Electric":"#7C3AED","ProSeal Roofing":"#0891B2","CleanSlate Turnover":"#059669","BreezeCool HVAC":"#D97706","Unassigned":"#EF4444"};
+const DEMO={
+  jobs:[
+    {id:"j1",wo:"WO-4821",address:"2847 Maple Ridge Dr, Frisco, TX 75034",client:"Silverstone Properties",tenant:"Marcus Webb",tenantPhone:"(469) 555-0192",type:"Plumbing",status:"In Progress",vendor:"Apex Plumbing",vendorPhone:"972-555-0188",date:"2026-05-29",nte:350,vendorQuote:210,clientQuote:315,notes:"Leaking supply line under kitchen sink. Replaced shutoff valve. Tested — all clear.",dueDate:"2026-05-30"},
+    {id:"j2",wo:"WO-4822",address:"1103 Clearwater Blvd, McKinney, TX 75070",client:"Nexus Residential",tenant:"Diane Foster",tenantPhone:"(972) 555-0344",type:"Electrical",status:"Vendor Assigned",vendor:"TrueLevel Electric",vendorPhone:"214-555-0377",date:"2026-05-29",nte:175,vendorQuote:120,clientQuote:175,notes:"GFCI outlet in master bath not resetting.",dueDate:"2026-05-31"},
+    {id:"j3",wo:"WO-4830",address:"7720 Heritage Oak Ct, Plano, TX 75025",client:"Silverstone Properties",tenant:"James Okafor",tenantPhone:"(469) 555-0234",type:"HVAC",status:"New",vendor:"",vendorPhone:"",date:"2026-05-29",nte:225,vendorQuote:0,clientQuote:0,notes:"HVAC not cooling — unit runs but no cold air. Need vendor site visit.",dueDate:"2026-06-04"},
+    {id:"j4",wo:"WO-4815",address:"509 Windmill Lane, Allen, TX 75002",client:"Pinnacle Asset Group",tenant:"Ray Sandoval",tenantPhone:"(214) 555-0871",type:"Roofing",status:"Completed",vendor:"ProSeal Roofing",vendorPhone:"469-555-0522",date:"2026-05-25",nte:500,vendorQuote:340,clientQuote:490,notes:"Replaced two missing shingles, re-sealed flashing. No active leaks.",dueDate:"2026-05-26"},
+    {id:"j5",wo:"WO-4828",address:"3341 Stonegate Dr, Garland, TX 75044",client:"Nexus Residential",tenant:"Priya Nair",tenantPhone:"(972) 555-0512",type:"Plumbing",status:"Invoice Sent",vendor:"Apex Plumbing",vendorPhone:"972-555-0188",date:"2026-05-22",nte:400,vendorQuote:265,clientQuote:395,notes:"Replaced wax ring and flange bolts on master toilet.",dueDate:"2026-05-25"},
+  ],
+  turns:[
+    {id:"t1",wo:"TURN-2201",address:"4412 Brookhaven Dr, Richardson, TX 75080",client:"Pinnacle Asset Group",vendor:"CleanSlate Turnover",vendorPhone:"972-555-0641",moveOut:"2026-05-15",moveIn:"2026-06-01",status:"In Progress",nte:2800,vendorQuote:1950,clientQuote:2750,notes:"Full turnover: carpet LR/hallway, full paint, clean appliances, touch-up trim."},
+    {id:"t2",wo:"TURN-2198",address:"881 Lakeview Terrace, Mesquite, TX 75149",client:"Silverstone Properties",vendor:"CleanSlate Turnover",vendorPhone:"972-555-0641",moveOut:"2026-05-10",moveIn:"2026-05-28",status:"Completed",nte:1800,vendorQuote:1200,clientQuote:1750,notes:"Paint full unit, deep clean, replace bathroom fixtures. Done."},
+  ],
+  vendors:[
+    {id:"v1",name:"Apex Plumbing",trade:"Plumbing",area:"DFW Metro",phone:"972-555-0188",email:"dispatch@apexplumbing.com",status:"Active",w9:true,coi:true},
+    {id:"v2",name:"TrueLevel Electric",trade:"Electrical",area:"Dallas / Collin County",phone:"214-555-0377",email:"jobs@truelevelelectric.com",status:"Active",w9:true,coi:true},
+    {id:"v3",name:"ProSeal Roofing",trade:"Roofing",area:"DFW Metro",phone:"469-555-0522",email:"bids@prosealroofing.com",status:"Active",w9:true,coi:true},
+    {id:"v4",name:"CleanSlate Turnover",trade:"Turnover / Cleaning",area:"DFW + Surrounding",phone:"972-555-0641",email:"schedule@cleanslatetx.com",status:"Active",w9:true,coi:true},
+    {id:"v5",name:"BreezeCool HVAC",trade:"HVAC",area:"Collin / Dallas County",phone:"214-555-0819",email:"service@breezecooldfw.com",status:"Onboarding",w9:false,coi:false},
+    {id:"v6",name:"SolidGround Concrete",trade:"Concrete / Foundation",area:"DFW Metro",phone:"469-555-0293",email:"",status:"Prospect",w9:false,coi:false},
+  ],
+  clients:[
+    {id:"c1",name:"Silverstone Properties",contact:"Greg Halvorsen",phone:"972-555-0100",email:"greg.h@silverstoneprops.com",units:500,followUp:"",notes:"Primary billing via accounting email."},
+    {id:"c2",name:"Nexus Residential",contact:"Amanda Pierce",phone:"214-555-0250",email:"amanda@nexusresidential.com",units:320,followUp:"",notes:"Fast-growing PM. Net 30 invoicing."},
+    {id:"c3",name:"Pinnacle Asset Group",contact:"Derek Okonkwo",phone:"469-555-0390",email:"derek@pinnacleag.com",units:280,followUp:"",notes:"Expanding to OKC Q3 2026."},
+    {id:"c4",name:"BlueSky Property Mgmt",contact:"Samantha Reyes",phone:"972-555-0477",email:"sreyes@blueskypm.com",units:0,followUp:"2026-06-03",notes:"Met at NARPM. Interested in pilot."},
+    {id:"c5",name:"Meridian Living Group",contact:"Tom Whitfield",phone:"214-555-0588",email:"tom@meridianliving.com",units:0,followUp:"2026-06-01",notes:"Referred by Pinnacle. 200 units Frisco/Allen."},
+  ]
+};
+
+// ─── STATUS CONFIG ────────────────────────────────────────────
+const SC={
+  "New":"sc-new","Vendor Assigned":"sc-assigned","In Progress":"sc-progress",
+  "Completed":"sc-completed","Paid":"sc-paid","Invoice Sent":"sc-invoice","Pending Correction":"sc-correction"
+};
+const BAR_COLOR={"New":"#BFDBFE","Vendor Assigned":"#FDE68A","In Progress":"#FCD34D","Completed":"#6EE7B7","Paid":"#34D399","Invoice Sent":"#C4B5FD","Pending Correction":"#FCA5A5"};
+const TYPE_ICON={"Plumbing":"🔧","Electrical":"⚡","HVAC":"❄️","Roofing":"🏠","General":"🛠️","Turnover":"🔄","Flooring":"🪵","Painting":"🎨","Concrete":"🧱"};
+
+// ─── SHARED UTILS ─────────────────────────────────────────────
+const money=n=>{const v=parseFloat(n||0);return isNaN(v)?0:v;};
+const fmt=n=>"$"+money(n).toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:0});
+const mapsUrl=addresses=>addresses.length===1?"https://maps.google.com/maps?q="+encodeURIComponent(addresses[0]):"https://maps.google.com/maps/dir/"+addresses.map(a=>encodeURIComponent(a)).join("/");
+
+// ─── SHARED COMPONENTS ────────────────────────────────────────
+function Modal({title,onClose,children}){
+  return <div className="modal-bg" onClick={onClose}>
+    <div className="modal-sheet" onClick={e=>e.stopPropagation()}>
+      <div className="modal-handle"/>
+      <div className="modal-header">
+        <span className="modal-title">{title}</span>
+        <button className="modal-close" onClick={onClose}>✕</button>
+      </div>
+      <div className="modal-body">{children}</div>
+    </div>
+  </div>;
+}
+
+function Accordion({title,sub,children,open:defaultOpen=false}){
+  const[open,setOpen]=useState(defaultOpen);
+  return <div className="acc">
+    <div className="acc-hd" onClick={()=>setOpen(o=>!o)}>
+      <div><div className="acc-title">{title}</div>{sub&&<div className="acc-sub">{sub}</div>}</div>
+      <span style={{color:"#94A3B8",fontSize:".8rem",transition:"transform .2s",display:"inline-block",transform:open?"rotate(180deg)":"rotate(0deg)"}}>▼</span>
+    </div>
+    {open&&<div className="acc-body">{children}</div>}
+  </div>;
+}
+
+function FInp({label,value,onChange,type="text",placeholder,textarea,options}){
+  return <div>
+    <label className="f-label">{label}</label>
+    {options
+      ?<select value={value} onChange={e=>onChange(e.target.value)} className="f-input">
+        <option value="">Select…</option>
+        {options.map(o=><option key={o} value={o}>{o}</option>)}
+      </select>
+      :textarea
+        ?<textarea value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} className="f-input"/>
+        :<input type={type} value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} className="f-input"/>
+    }
+  </div>;
+}
+
+function StatusChip({status}){
+  return <span className={"status-chip "+(SC[status]||"sc-new")}>{status}</span>;
+}
+
+function Btn({label,cls="ta-gray",onClick,icon}){
+  return <button className={"ta-btn "+cls} onClick={onClick}>{icon&&<span>{icon}</span>}{label}</button>;
+}
+
+// ─── SMS MODAL ────────────────────────────────────────────────
+function SMSModal({job,onClose}){
+  const[msgs,setMsgs]=useState([
+    {from:"system",text:"Conversation started for "+job.wo+" · "+job.address},
+    {from:"out",text:"Hi "+job.tenant.split(" ")[0]+"! This is ProManage coordinating your work order. A technician from "+job.vendor+" is scheduled. We'll confirm the time shortly."},
+  ]);
+  const[input,setInput]=useState("");
+  const endRef=useRef();
+  useEffect(()=>endRef.current?.scrollIntoView({behavior:"smooth"}),[msgs]);
+  const send=()=>{
+    if(!input.trim())return;
+    setMsgs(m=>[...m,{from:"out",text:input.trim()}]);
+    setInput("");
+    setTimeout(()=>setMsgs(m=>[...m,{from:"in",text:"Thanks for the update! See you then."}]),1200);
+  };
+  const exportPDF=()=>{
+    const lines=msgs.filter(m=>m.from!=="system").map(m=>(m.from==="out"?"[ProManage]: ":"["+job.tenant+"]: ")+m.text).join("\n\n");
+    const msgHtml=msgs.filter(m=>m.from!=="system").map(m=>{
+      const cls=m.from==="out"?"out":"in";
+      const who=m.from==="out"?"<strong>ProManage:</strong>":"<strong>"+job.tenant.split(" ")[0]+":</strong>";
+      return "<p class=\""+cls+"\">"+who+" "+m.text+"</p>";
+    }).join("");
+    const html="<html><head><title>SMS Log "+job.wo+"</title><style>body{font-family:Arial,sans-serif;padding:2rem;max-width:600px;margin:auto;}h2{color:#1E40AF;}p{margin:.5rem 0;line-height:1.6;font-size:14px;}.out{text-align:right;color:#1D4ED8;}.in{color:#0F172A;}.meta{font-size:11px;color:#94A3B8;margin-top:1rem;}</style></head><body><h2>SMS Log — "+job.wo+"</h2><p><strong>Tenant:</strong> "+job.tenant+" "+job.tenantPhone+"</p><p><strong>Address:</strong> "+job.address+"</p><hr/>"+msgHtml+"<p class=\"meta\">Exported "+new Date().toLocaleString()+" · ProManage powered by DRC</p></body></html>";
+    const w=window.open("","_blank");w.document.write(html);w.document.close();setTimeout(()=>w.print(),400);
+  };
+  return <Modal title={"💬 Text "+job.tenant+" · "+job.tenantPhone} onClose={onClose}>
+    <div style={{background:"#F8FAFC",borderRadius:10,padding:".75rem",marginBottom:".75rem",minHeight:180,maxHeight:280,overflowY:"auto",display:"flex",flexDirection:"column",gap:".3rem"}}>
+      {msgs.map((m,i)=>m.from==="system"
+        ?<div key={i} style={{textAlign:"center",fontSize:".65rem",color:"#94A3B8",padding:"2px 0"}}>{m.text}</div>
+        :<div key={i} style={{display:"flex",justifyContent:m.from==="out"?"flex-end":"flex-start"}}>
+          <div className={"sms-bubble "+(m.from==="out"?"sms-out":"sms-in")}>{m.text}</div>
+        </div>
+      )}
+      <div ref={endRef}/>
+    </div>
+    <div style={{display:"flex",gap:".5rem",marginBottom:".75rem"}}>
+      <input value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&send()} placeholder="Type a message…" className="f-input" style={{flex:1,margin:0}}/>
+      <button onClick={send} className="ta-btn ta-primary" style={{flexShrink:0}}>Send</button>
+    </div>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:".5rem"}}>
+      <button onClick={exportPDF} className="ta-btn ta-blue" style={{justifyContent:"center"}}>📄 Export PDF Log</button>
+      <button onClick={()=>{const msg=encodeURIComponent("Hi! Your work order at "+job.address+" is complete. We'd love your feedback: https://g.page/r/DEMO_REVIEW_LINK/review");window.open("sms:"+job.tenantPhone+"?body="+msg);}} className="ta-btn ta-green" style={{justifyContent:"center"}}>⭐ Send Google Review</button>
+    </div>
+    <div style={{marginTop:".5rem",fontSize:".65rem",color:"#94A3B8",textAlign:"center"}}>Powered by RingCentral · Demo Mode</div>
+  </Modal>;
+}
+
+// ─── PHOTO UPLOAD SECTION ─────────────────────────────────────
+function PhotoUploadSection({photos,onChange}){
+  const cats=["before","during","after"];
+  const CAT_LABELS={"before":"Before","during":"During","after":"After"};
+  const addPhoto=(cat,file)=>{
+    const rd=new FileReader();
+    rd.onload=ev=>{
+      const next={...photos,[cat]:[...(photos[cat]||[]),{id:Date.now().toString(),name:file.name,data:ev.target.result}]};
+      onChange(next);
+    };
+    rd.readAsDataURL(file);
+  };
+  const removePhoto=(cat,id)=>{
+    const next={...photos,[cat]:(photos[cat]||[]).filter(p=>p.id!==id)};
+    onChange(next);
+  };
+  const totalCount=cats.reduce((s,c)=>s+(photos[c]||[]).length,0);
+  return <div>
+    {totalCount===0&&<div style={{background:"#F0F9FF",border:"1.5px dashed #BFDBFE",borderRadius:10,padding:"1rem",textAlign:"center",marginBottom:".65rem",color:"#3B82F6",fontSize:".78rem",fontWeight:600}}>
+      📸 No photos yet — upload Before, During, and After shots below
+    </div>}
+    {cats.map(cat=>(
+      <div key={cat} style={{marginBottom:".65rem"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:".3rem"}}>
+          <span style={{fontSize:".7rem",fontWeight:800,color:"#334155",textTransform:"uppercase",letterSpacing:".05em"}}>
+            {cat==="before"?"🔴":cat==="during"?"🟡":"🟢"} {CAT_LABELS[cat]} ({(photos[cat]||[]).length})
+          </span>
+          <label style={{background:"#EFF6FF",color:"#1D4ED8",border:"1px solid #BFDBFE",borderRadius:7,padding:"4px 10px",fontSize:".68rem",fontWeight:700,cursor:"pointer"}}>
+            + Add Photo
+            <input type="file" accept="image/*" multiple style={{display:"none"}} onChange={e=>{Array.from(e.target.files).forEach(f=>addPhoto(cat,f));e.target.value="";}}/>
+          </label>
+        </div>
+        {(photos[cat]||[]).length>0&&(
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(90px,1fr))",gap:".35rem"}}>
+            {(photos[cat]||[]).map(p=>(
+              <div key={p.id} style={{position:"relative",borderRadius:8,overflow:"hidden",border:"1px solid #E2E8F0",aspectRatio:"1"}}>
+                <img src={p.data} alt={p.name} style={{width:"100%",height:"100%",objectFit:"cover",display:"block"}}/>
+                <button onClick={()=>removePhoto(cat,p.id)} style={{position:"absolute",top:3,right:3,background:"rgba(0,0,0,.55)",border:"none",borderRadius:"50%",width:20,height:20,color:"#fff",fontSize:".65rem",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>✕</button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    ))}
+  </div>;
+}
+
+
+// ─── JOB EDIT MODAL ──────────────────────────────────────────
+function JobEditModal({job,vendors,clients,onSave,onClose}){
+  const blank={wo:"",address:"",client:"",tenant:"",tenantPhone:"",type:"General",status:"New",vendor:"",notes:"",nte:"",vendorQuote:"",clientQuote:"",dueDate:""};
+  const[form,setForm]=useState(job?{...blank,...job,nte:job.nte||"",vendorQuote:job.vendorQuote||"",clientQuote:job.clientQuote||""}:blank);
+  const set=k=>v=>setForm(f=>({...f,[k]:v}));
+  const profit=money(form.clientQuote)-money(form.vendorQuote);
+  return <Modal title={job?"Edit "+form.wo:"New Work Order"} onClose={onClose}>
+    <Accordion title="📍 Property & Assignment" open>
+      <div className="f-row">
+        <FInp label="WO #" value={form.wo} onChange={set("wo")} placeholder="WO-0000"/>
+        <FInp label="Status" value={form.status} onChange={set("status")} options={Object.keys(SC)}/>
+      </div>
+      <FInp label="Address" value={form.address} onChange={set("address")} placeholder="123 Main St, City, TX"/>
+      <div className="f-row">
+        <FInp label="Client" value={form.client} onChange={set("client")} options={clients.map(c=>c.name)}/>
+        <FInp label="Job Type" value={form.type} onChange={set("type")} options={Object.keys(TYPE_ICON)}/>
+      </div>
+      <div className="f-row">
+        <FInp label="Vendor Assigned" value={form.vendor} onChange={set("vendor")} options={["Unassigned",...vendors.map(v=>v.name)]}/>
+        <FInp label="Due Date" value={form.dueDate} onChange={set("dueDate")} type="date"/>
+      </div>
+    </Accordion>
+    <Accordion title="👤 Tenant Info">
+      <div className="f-row">
+        <FInp label="Tenant Name" value={form.tenant} onChange={set("tenant")} placeholder="Jane Doe"/>
+        <FInp label="Tenant Phone" value={form.tenantPhone} onChange={set("tenantPhone")} placeholder="(214) 555-0000"/>
+      </div>
+    </Accordion>
+    <Accordion title="💰 Financials">
+      <div className="f-row">
+        <FInp label="NTE ($)" value={form.nte} onChange={set("nte")} type="number"/>
+        <FInp label="Vendor Quote ($)" value={form.vendorQuote} onChange={set("vendorQuote")} type="number"/>
+      </div>
+      <FInp label="Client Quote ($)" value={form.clientQuote} onChange={set("clientQuote")} type="number"/>
+      <div style={{background:"#EFF6FF",borderRadius:8,padding:".5rem .75rem",fontSize:".76rem",color:"#1E40AF",fontWeight:600}}>
+        Estimated Profit: <strong style={{color:profit>=0?"#166534":"#B91C1C"}}>{fmt(profit)}</strong> · Client {fmt(form.clientQuote)} · Vendor {fmt(form.vendorQuote)}
+      </div>
+    </Accordion>
+    <Accordion title="📝 Scope / Notes">
+      <FInp label="Work Notes / Scope" value={form.notes} onChange={set("notes")} textarea placeholder="Describe the issue and scope of work…"/>
+    </Accordion>
+    <Accordion title="📸 Photos">
+      <PhotoUploadSection photos={form.photos||{before:[],during:[],after:[]}} onChange={p=>setForm(f=>({...f,photos:p}))}/>
+    </Accordion>
+    <button onClick={()=>onSave(form)} style={{width:"100%",marginTop:".5rem",padding:".75rem",background:"linear-gradient(135deg,#2563EB,#0EA5E9)",color:"#fff",border:"none",borderRadius:10,fontWeight:800,fontSize:".9rem",cursor:"pointer"}}>
+      {job?"Save Changes":"Create Work Order"} ✓
+    </button>
+  </Modal>;
+}
+
+// ─── DISPATCH MODAL ───────────────────────────────────────────
+function DispatchModal({job,vendors,onClose}){
+  const vendor=vendors.find(v=>v.name===(job.vendor||job.vendors));
+  const[sent,setSent]=useState(false);
+  const mapsLink=mapsUrl([job.address]);
+  const msg="New Work Order Dispatched!\n\nWO: "+(job.wo||job.workOrderNumber)+"\nAddress: "+job.address+"\nClient: "+(job.client||job.clientName||"")+"\nTenant: "+(job.tenant||"N/A")+" "+(job.tenantPhone||"")+"\nNTE: $"+(job.nte||job.nteBudget||"TBD")+"\nDue: "+(job.dueDate||"ASAP")+"\n\nScope:\n"+(job.notes||"See work order for details.")+"\n\nRoute to property:\n"+mapsLink+"\n\nProManage \u00b7 Powered by DRC";
+  const dispatch=()=>{
+    if(vendor&&vendor.phone){window.open("sms:"+vendor.phone+"?body="+encodeURIComponent(msg));}
+    setSent(true);
+  };
+  return <Modal title={"📤 Dispatch — "+(job.wo||job.workOrderNumber)} onClose={onClose}>
+    {vendor&&<div style={{background:"#EFF6FF",border:"1px solid #BFDBFE",borderRadius:10,padding:".65rem .85rem",marginBottom:".75rem",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:".4rem"}}>
+      <div>
+        <div style={{fontWeight:800,fontSize:".85rem",color:"#1E40AF"}}>👷 {vendor.name}</div>
+        <div style={{fontSize:".72rem",color:"#3B82F6"}}>📞 {vendor.phone} · {vendor.trade}</div>
+      </div>
+      <div style={{display:"flex",gap:".35rem"}}>
+        <button onClick={()=>window.open("tel:"+vendor.phone)} className="ta-btn ta-blue" style={{fontSize:".7rem",padding:"6px 10px"}}>📞 Call</button>
+        <button onClick={()=>window.open("sms:"+vendor.phone+"?body="+encodeURIComponent(msg))} className="ta-btn ta-green" style={{fontSize:".7rem",padding:"6px 10px"}}>💬 Text</button>
+      </div>
+    </div>}
+    <div style={{background:"#F8FAFC",borderRadius:10,padding:".75rem",marginBottom:".75rem",fontSize:".78rem",color:"#334155",lineHeight:1.7,whiteSpace:"pre-wrap",maxHeight:220,overflowY:"auto",border:"1px solid #E2E8F0"}}>{msg}</div>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:".5rem",marginBottom:".5rem"}}>
+      <button onClick={dispatch} className="ta-btn ta-primary" style={{justifyContent:"center",padding:".7rem"}}>
+        {sent?"✅ Dispatched!":"📤 Send Dispatch"}
+      </button>
+      <button onClick={()=>window.open(mapsLink,"_blank")} className="ta-btn ta-blue" style={{justifyContent:"center",padding:".7rem"}}>
+        🗺️ Property Route
+      </button>
+    </div>
+    {sent&&<div style={{background:"#D1FAE5",border:"1px solid #6EE7B7",borderRadius:8,padding:".55rem .75rem",fontSize:".76rem",color:"#065F46",fontWeight:700,textAlign:"center"}}>
+      ✅ Dispatch sent to {vendor?vendor.name:"vendor"} via SMS · Google Maps link included
+    </div>}
+    <div style={{marginTop:".5rem",fontSize:".65rem",color:"#94A3B8",textAlign:"center"}}>Powered by RingCentral · Demo Mode</div>
+  </Modal>;
+}
+
+// ─── VENDOR DETAIL MODAL ──────────────────────────────────────
+function VendorDetailModal({job,vendors,onClose}){
+  const vendor=vendors.find(v=>v.name===(job.vendor||job.vendors));
+  const[sent,setSent]=useState(false);
+  if(!vendor)return <Modal title="Vendor Info" onClose={onClose}><div style={{color:"#94A3B8",textAlign:"center",padding:"2rem"}}>No vendor assigned to this job yet.</div></Modal>;
+  const packet="Hi "+vendor.name+"! Here's your work packet for WO "+(job.wo||job.workOrderNumber)+":\n\n📍 Address: "+job.address+"\n👤 Tenant: "+(job.tenant||"N/A")+" "+(job.tenantPhone||"")+"\n💰 NTE: $"+(job.nte||job.nteBudget||"TBD")+"\n📅 Due: "+(job.dueDate||"ASAP")+"\n\nScope:\n"+(job.notes||"See details.")+"\n\nRoute: "+mapsUrl([job.address])+"\n\nPlease confirm receipt. — ProManage";
+  const vColor=VENDOR_COLORS[vendor.name]||"#2563EB";
+  return <Modal title={"👷 "+vendor.name} onClose={onClose}>
+    <div style={{background:"#F8FAFC",borderRadius:12,padding:".85rem",marginBottom:".75rem",border:"2px solid "+vColor+"33"}}>
+      <div style={{display:"flex",gap:".75rem",alignItems:"flex-start",flexWrap:"wrap"}}>
+        <div style={{width:44,height:44,borderRadius:10,background:vColor,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"1.3rem",flexShrink:0}}>👷</div>
+        <div style={{flex:1}}>
+          <div style={{fontWeight:800,fontSize:".95rem",color:"#0F172A",marginBottom:".15rem"}}>{vendor.name}</div>
+          <div style={{fontSize:".75rem",color:"#64748B",marginBottom:".1rem"}}>🛠️ {vendor.trade} · 📍 {vendor.area}</div>
+          <div style={{fontSize:".74rem",color:"#334155"}}>📞 {vendor.phone}</div>
+          {vendor.email&&<div style={{fontSize:".72rem",color:"#64748B"}}>✉️ {vendor.email}</div>}
+        </div>
+      </div>
+      <div style={{display:"flex",gap:".4rem",marginTop:".65rem",flexWrap:"wrap"}}>
+        <span style={{fontSize:".65rem",background:vendor.w9?"#D1FAE5":"#FEE2E2",color:vendor.w9?"#065F46":"#B91C1C",borderRadius:6,padding:"3px 8px",fontWeight:700}}>W9 {vendor.w9?"✓ On File":"✗ Missing"}</span>
+        <span style={{fontSize:".65rem",background:vendor.coi?"#D1FAE5":"#FEE2E2",color:vendor.coi?"#065F46":"#B91C1C",borderRadius:6,padding:"3px 8px",fontWeight:700}}>COI {vendor.coi?"✓ On File":"✗ Missing"}</span>
+        <span style={{fontSize:".65rem",background:"#EFF6FF",color:"#1D4ED8",borderRadius:6,padding:"3px 8px",fontWeight:700}}>{vendor.status}</span>
+      </div>
+    </div>
+    <div style={{fontSize:".75rem",fontWeight:700,color:"#334155",marginBottom:".35rem"}}>📋 Work Packet to Send:</div>
+    <div style={{background:"#F8FAFC",borderRadius:8,padding:".65rem",marginBottom:".65rem",fontSize:".75rem",color:"#475569",lineHeight:1.6,whiteSpace:"pre-wrap",maxHeight:160,overflowY:"auto",border:"1px solid #E2E8F0"}}>{packet}</div>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:".5rem"}}>
+      <button onClick={()=>{window.open("sms:"+vendor.phone+"?body="+encodeURIComponent(packet));setSent(true);}} className="ta-btn ta-primary" style={{justifyContent:"center",padding:".65rem"}}>
+        {sent?"✅ Sent!":"💬 Send Work Packet"}
+      </button>
+      <button onClick={()=>window.open("tel:"+vendor.phone)} className="ta-btn ta-blue" style={{justifyContent:"center",padding:".65rem"}}>📞 Call Vendor</button>
+    </div>
+    {sent&&<div style={{marginTop:".5rem",background:"#D1FAE5",border:"1px solid #6EE7B7",borderRadius:8,padding:".5rem",fontSize:".73rem",color:"#065F46",fontWeight:700,textAlign:"center"}}>Work packet sent via SMS ✓</div>}
+  </Modal>;
+}
+
+
+// ─── TICKET CARD ─────────────────────────────────────────────
+function TicketCard({item,type="job",onEdit,onSMS,onDispatch,onVendor,vendors}){
+  const isJob=type==="job";
+  const status=item.status||"New";
+  const barColor=BAR_COLOR[status]||"#BFDBFE";
+  const vColor=VENDOR_COLORS[item.vendor||item.vendors]||"#94A3B8";
+  const profit=money(item.clientQuote||item.drcClientQuote||0)-money(item.vendorQuote||0);
+  const typeIcon=TYPE_ICON[item.type||item.jobType]||"🛠️";
+  const openMaps=()=>window.open(mapsUrl([item.address]),"_blank");
+  return <div className="ticket">
+    <div className="ticket-bar" style={{background:barColor}}/>
+    <div className="ticket-body">
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:".3rem",marginBottom:".4rem"}}>
+        <div>
+          <div className="ticket-wo">{typeIcon} {isJob?"Job":"Turn"} · {item.wo||item.workOrderNumber}</div>
+          <div className="ticket-address">{item.address}</div>
+        </div>
+        <StatusChip status={status}/>
+      </div>
+      <div className="ticket-meta">
+        {(item.client||item.clientName)&&<span className="ticket-meta-item">🏢 <strong>{item.client||item.clientName}</strong></span>}
+        {(item.vendor||item.vendors)&&<span className="ticket-meta-item" style={{color:vColor}}>👷 <strong>{item.vendor||item.vendors}</strong></span>}
+        {isJob&&item.tenant&&<span className="ticket-meta-item">👤 {item.tenant}</span>}
+        {!isJob&&item.moveIn&&<span className="ticket-meta-item">📅 Move-in: <strong>{item.moveIn}</strong></span>}
+        {(item.nte||item.nteBudget)&&<span className="ticket-meta-item">NTE: <strong style={{color:"#2563EB"}}>{fmt(item.nte||item.nteBudget)}</strong></span>}
+        {profit!==0&&<span className="ticket-meta-item">Profit: <strong style={{color:profit>0?"#059669":"#DC2626"}}>{fmt(profit)}</strong></span>}
+      </div>
+      {item.notes&&item.notes.length>0&&<div style={{fontSize:".75rem",color:"#64748B",marginBottom:".35rem",lineHeight:1.4}}>{item.notes.length>100?item.notes.slice(0,100)+"…":item.notes}</div>}
+      <div className="ticket-actions">
+        {isJob&&item.tenant&&item.tenantPhone&&<Btn label="💬 Text Tenant" cls="ta-primary" onClick={e=>{e.stopPropagation();onSMS(item);}}/>}
+        {(item.vendor||item.vendors)&&<Btn label="📤 Dispatch" cls="ta-blue" onClick={e=>{e.stopPropagation();onDispatch(item);}}/>}
+        {(item.vendor||item.vendors)&&<Btn label="👷 Vendor" cls="ta-gray" onClick={e=>{e.stopPropagation();onVendor(item);}}/>}
+        {!(item.vendor||item.vendors)&&<Btn label="⚡ Assign Vendor" cls="ta-red" onClick={e=>{e.stopPropagation();onEdit(item);}}/>}
+        <Btn label="📍 Maps" cls="ta-blue" onClick={e=>{e.stopPropagation();openMaps();}}/>
+        <Btn label="✏️ Edit" cls="ta-gray" onClick={e=>{e.stopPropagation();onEdit(item);}}/>
+        {status==="Completed"&&<Btn label="⭐ Review" cls="ta-green" onClick={e=>{e.stopPropagation();window.open("https://g.page/r/DEMO_REVIEW_LINK/review","_blank");}}/>}
+      </div>
+    </div>
+  </div>;
+}
+
+// ─── HOME TAB ─────────────────────────────────────────────────
+function HomeTab({jobs,turns,vendors,clients,onNav}){
+  const AREAS=["DFW — Dallas/Frisco/Plano","San Antonio Metro","Houston Metro","Austin Metro"];
+  const[area,setArea]=useState(0);
+  const WEATHER=[
+    {icon:"⛅",temp:"84°F",desc:"Partly Cloudy",wind:"12 mph SE",humidity:"58%"},
+    {icon:"☀️",temp:"91°F",desc:"Sunny & Hot",wind:"8 mph S",humidity:"42%"},
+    {icon:"🌧️",temp:"76°F",desc:"Scattered Showers",wind:"15 mph NE",humidity:"80%"},
+    {icon:"🌤️",temp:"88°F",temp2:"88°F",desc:"Mostly Clear",wind:"10 mph SW",humidity:"51%"},
+  ];
+  const wx=WEATHER[area];
+  const today=new Date().toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric"});
+  const todayJobs=jobs.filter(j=>j.date===new Date().toISOString().slice(0,10)||j.status==="In Progress"||j.status==="Vendor Assigned");
+  const unassigned=jobs.filter(j=>!j.vendor&&j.status!=="Completed"&&j.status!=="Paid");
+  const followUps=clients.filter(c=>c.followUp);
+  const allActive=[...jobs.filter(j=>!["Completed","Paid"].includes(j.status)),...turns.filter(t=>!["Completed","Paid"].includes(t.status))];
+  const vendorGroups={};
+  allActive.forEach(j=>{const v=j.vendor||j.vendors||"Unassigned";if(!vendorGroups[v])vendorGroups[v]=[];vendorGroups[v].push(j);});
+  const openRoute=vName=>{
+    const addrs=vendorGroups[vName].map(j=>j.address);
+    window.open(mapsUrl(addrs),"_blank");
+  };
+  return <div style={{animation:"slideUp .3s ease"}}>
+    {/* MORNING BRIEFING */}
+    <div style={{background:"linear-gradient(135deg,#1E3A5F,#1E40AF)",borderRadius:16,padding:"1.1rem 1.25rem",marginBottom:"1rem",color:"#fff"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:".5rem"}}>
+        <div>
+          <div style={{fontSize:".7rem",color:"#93C5FD",fontWeight:600,textTransform:"uppercase",letterSpacing:".06em",marginBottom:".15rem"}}>Good morning ✦</div>
+          <div style={{fontFamily:"Plus Jakarta Sans,sans-serif",fontSize:"1.1rem",fontWeight:800,marginBottom:".25rem"}}>{today}</div>
+          <div style={{display:"flex",gap:"1rem",flexWrap:"wrap",marginTop:".4rem"}}>
+            <span style={{fontSize:".82rem",color:"#BFDBFE"}}><strong style={{color:"#fff",fontSize:"1.1rem"}}>{allActive.length}</strong> active jobs</span>
+            {unassigned.length>0&&<span style={{fontSize:".82rem",color:"#FCA5A5"}}><strong style={{color:"#FCA5A5",fontSize:"1.1rem"}}>{unassigned.length}</strong> need vendor</span>}
+            <span style={{fontSize:".82rem",color:"#BFDBFE"}}><strong style={{color:"#fff",fontSize:"1.1rem"}}>{vendors.length}</strong> vendors</span>
+          </div>
+        </div>
+        {/* WEATHER */}
+        <div style={{background:"rgba(255,255,255,.1)",borderRadius:12,padding:".65rem .9rem",minWidth:140}}>
+          <select value={area} onChange={e=>setArea(+e.target.value)} style={{background:"transparent",border:"none",color:"#93C5FD",fontSize:".62rem",fontWeight:700,marginBottom:".3rem",width:"100%",cursor:"pointer"}}>
+            {AREAS.map((a,i)=><option key={i} value={i} style={{background:"#1E3A5F"}}>{a}</option>)}
+          </select>
+          <div style={{display:"flex",alignItems:"center",gap:".5rem"}}>
+            <span style={{fontSize:"1.8rem"}}>{wx.icon}</span>
+            <div>
+              <div style={{fontSize:"1.2rem",fontWeight:800}}>{wx.temp}</div>
+              <div style={{fontSize:".65rem",color:"#BFDBFE"}}>{wx.desc}</div>
+              <div style={{fontSize:".62rem",color:"#93C5FD"}}>💨 {wx.wind} · 💧 {wx.humidity}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {/* UNASSIGNED ALERT */}
+    {unassigned.length>0&&<div style={{background:"#FEF2F2",border:"1.5px solid #FECACA",borderRadius:12,padding:".75rem 1rem",marginBottom:".85rem",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:".5rem"}}>
+      <div>
+        <div style={{fontWeight:800,color:"#B91C1C",fontSize:".85rem"}}>⚠️ {unassigned.length} Job{unassigned.length>1?"s":""} Need a Vendor</div>
+        <div style={{fontSize:".72rem",color:"#EF4444",marginTop:".15rem"}}>{unassigned.map(j=>j.wo).join(" · ")}</div>
+      </div>
+      <button onClick={()=>onNav("jobs")} className="ta-btn ta-red" style={{fontSize:".75rem"}}>Assign Now →</button>
+    </div>}
+
+    {/* DISPATCH MAP */}
+    <div style={{background:"#fff",border:"1px solid #E2E8F0",borderRadius:14,padding:".85rem 1rem",marginBottom:".85rem"}}>
+      <div className="sec-hd" style={{marginBottom:".65rem"}}>
+        <div><div className="sec-title">📍 Today's Dispatch Map</div><div className="sec-sub">Vendor routes · click to open in Google Maps</div></div>
+      </div>
+      {/* Static map visual */}
+      <div style={{background:"linear-gradient(135deg,#EFF6FF,#F0F9FF)",border:"1px solid #BFDBFE",borderRadius:10,padding:"1rem",marginBottom:".65rem",position:"relative",minHeight:140}}>
+        <div style={{display:"flex",flexWrap:"wrap",gap:".5rem",justifyContent:"center",padding:".5rem 0"}}>
+          {Object.entries(vendorGroups).map(([vName,vJobs])=>(
+            <div key={vName} style={{background:"#fff",borderRadius:10,padding:".5rem .75rem",border:"2px solid "+(VENDOR_COLORS[vName]||"#E2E8F0"),minWidth:130,maxWidth:180}}>
+              <div style={{fontSize:".68rem",fontWeight:800,color:VENDOR_COLORS[vName]||"#64748B",marginBottom:".3rem"}}>👷 {vName}</div>
+              {vJobs.map((j,i)=>(
+                <div key={j.id} style={{fontSize:".65rem",color:"#334155",padding:"2px 0",borderBottom:(i<vJobs.length-1)?"1px solid #F1F5F9":"none"}}>
+                  📌 {j.address.split(",")[0]}
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+        <div style={{textAlign:"center",fontSize:".62rem",color:"#94A3B8",marginTop:".25rem"}}>Static preview · live map via Google Maps API</div>
+      </div>
+      {/* Route buttons per vendor */}
+      <div style={{display:"flex",gap:".4rem",flexWrap:"wrap"}}>
+        {Object.entries(vendorGroups).filter(([v])=>v!=="Unassigned").map(([vName,vJobs])=>(
+          <button key={vName} onClick={()=>openRoute(vName)} className="ta-btn ta-blue" style={{fontSize:".72rem"}}>
+            🗺️ {vName.split(" ")[0]}'s Route ({vJobs.length} stop{vJobs.length>1?"s":""})
+          </button>
+        ))}
+        {unassigned.length>0&&<button className="ta-btn ta-red" style={{fontSize:".72rem",cursor:"default"}}>
+          🔴 {unassigned.length} Unassigned
+        </button>}
+      </div>
+    </div>
+
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:".75rem",marginBottom:".85rem"}}>
+      {/* FOLLOW UPS */}
+      <div style={{background:"#fff",border:"1px solid #E2E8F0",borderRadius:14,padding:".85rem 1rem"}}>
+        <div style={{fontFamily:"Plus Jakarta Sans,sans-serif",fontSize:".88rem",fontWeight:800,color:"#0F172A",marginBottom:".5rem"}}>📞 Follow-Ups Due</div>
+        {followUps.length===0&&<div style={{fontSize:".72rem",color:"#94A3B8",fontStyle:"italic"}}>All clear ✓</div>}
+        {followUps.map(c=>(
+          <div key={c.id} style={{padding:".4rem 0",borderBottom:"1px solid #F1F5F9"}}>
+            <div style={{fontSize:".78rem",fontWeight:700,color:"#0F172A"}}>{c.name}</div>
+            <div style={{fontSize:".66rem",color:"#EF4444",fontWeight:600}}>Due: {c.followUp}</div>
+            <div style={{fontSize:".65rem",color:"#64748B"}}>{c.notes.slice(0,50)}</div>
+          </div>
+        ))}
+      </div>
+      {/* INTEGRATIONS */}
+      <div style={{background:"#fff",border:"1px solid #E2E8F0",borderRadius:14,padding:".85rem 1rem"}}>
+        <div style={{fontFamily:"Plus Jakarta Sans,sans-serif",fontSize:".88rem",fontWeight:800,color:"#0F172A",marginBottom:".5rem"}}>🔌 Integrations</div>
+        {[
+          {name:"QuickBooks",color:"#22C55E",status:"Connected"},
+          {name:"RingCentral",color:"#F97316",status:"Connected"},
+          {name:"Google Maps",color:"#3B82F6",status:"Connected"},
+          {name:"Zapier",color:"#F59E0B",status:"Available"},
+          {name:"CSV Export",color:"#10B981",status:"Universal"},
+        ].map(i=>(
+          <div key={i.name} className="int-badge" style={{marginBottom:".3rem",padding:".35rem .65rem"}}>
+            <div className="int-dot" style={{background:i.color}}/>
+            <span style={{flex:1,fontSize:".72rem"}}>{i.name}</span>
+            <span style={{fontSize:".62rem",color:i.status==="Connected"?"#059669":i.status==="Available"?"#D97706":"#94A3B8",fontWeight:700}}>{i.status}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    {/* AI CALLOUT */}
+    <div style={{background:"linear-gradient(135deg,#F5F3FF,#EFF6FF)",border:"1.5px solid #C4B5FD",borderRadius:14,padding:".85rem 1rem",display:"flex",gap:".75rem",alignItems:"center"}}>
+      <div style={{fontSize:"1.8rem",flexShrink:0}}>🤖</div>
+      <div>
+        <div style={{fontFamily:"Plus Jakarta Sans,sans-serif",fontSize:".88rem",fontWeight:800,color:"#4C1D95",marginBottom:".15rem"}}>AI-Powered Operations</div>
+        <div style={{fontSize:".73rem",color:"#6D28D9",lineHeight:1.5}}>ProManage can auto-file work orders, triage your inbox, draft vendor dispatches, and flag issues — all through natural language. <strong>Ask it anything.</strong></div>
+      </div>
+    </div>
+  </div>;
+}
+
+// ─── JOBS TAB ─────────────────────────────────────────────────
+function JobsTab({jobs,setJobs,vendors,clients}){
+  const[filter,setFilter]=useState("All");
+  const[search,setSearch]=useState("");
+  const[smsJob,setSmsJob]=useState(null);
+  const[dispatchJob,setDispatchJob]=useState(null);
+  const[vendorJob,setVendorJob]=useState(null);
+  const[editJob,setEditJob]=useState(null);
+  const[creating,setCreating]=useState(false);
+  const statuses=["All",...Object.keys(SC)];
+  const filtered=jobs.filter(j=>{
+    if(filter!=="All"&&j.status!==filter)return false;
+    if(search&&![j.wo,j.address,j.client,j.vendor,j.tenant].join(" ").toLowerCase().includes(search.toLowerCase()))return false;
+    return true;
+  });
+  const save=form=>{
+    setJobs(prev=>editJob?prev.map(j=>j.id===editJob.id?{...j,...form}:j):[...prev,{...form,id:"j"+Date.now()}]);
+    setEditJob(null);setCreating(false);
+  };
+  return <div>
+    {smsJob&&<SMSModal job={smsJob} onClose={()=>setSmsJob(null)}/>}
+    {dispatchJob&&<DispatchModal job={dispatchJob} vendors={vendors} onClose={()=>setDispatchJob(null)}/>}
+    {vendorJob&&<VendorDetailModal job={vendorJob} vendors={vendors} onClose={()=>setVendorJob(null)}/>}
+    {(editJob||creating)&&<JobEditModal job={editJob} vendors={vendors} clients={clients} onSave={save} onClose={()=>{setEditJob(null);setCreating(false);}}/>}
+    <div className="sec-hd">
+      <div><div className="sec-title">Work Orders</div><div className="sec-sub">{filtered.length} of {jobs.length} showing</div></div>
+      <button onClick={()=>setCreating(true)} className="ta-btn ta-primary">+ New Job</button>
+    </div>
+    <input className="search-bar" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search address, client, vendor, WO#…"/>
+    <div style={{display:"flex",gap:".35rem",flexWrap:"wrap",marginBottom:".85rem"}}>
+      {statuses.map(s=><button key={s} className={"pill"+(filter===s?" act":"")} onClick={()=>setFilter(s)}>{s}</button>)}
+    </div>
+    {filtered.length===0&&<div style={{textAlign:"center",padding:"3rem",color:"#94A3B8",fontSize:".85rem"}}>No jobs match your filter.</div>}
+    {filtered.map(j=><TicketCard key={j.id} item={j} type="job" vendors={vendors} onEdit={setEditJob} onSMS={setSmsJob} onDispatch={setDispatchJob} onVendor={setVendorJob}/>)}
+  </div>;
+}
+
+// ─── TURNS TAB ────────────────────────────────────────────────
+function TurnsTab({turns,setTurns,vendors,clients}){
+  const[filter,setFilter]=useState("All");
+  const[smsJob,setSmsJob]=useState(null);
+  const[dispatchTurn,setDispatchTurn]=useState(null);
+  const[vendorTurn,setVendorTurn]=useState(null);
+  const[editTurn,setEditTurn]=useState(null);
+  const statuses=["All","New","In Progress","Completed","Paid"];
+  const filtered=turns.filter(t=>filter==="All"||t.status===filter);
+  return <div>
+    {smsJob&&<SMSModal job={{...smsJob,tenant:smsJob.vendor,tenantPhone:smsJob.vendorPhone}} onClose={()=>setSmsJob(null)}/>}
+    {dispatchTurn&&<DispatchModal job={dispatchTurn} vendors={vendors} onClose={()=>setDispatchTurn(null)}/>}
+    {vendorTurn&&<VendorDetailModal job={vendorTurn} vendors={vendors} onClose={()=>setVendorTurn(null)}/>}
+    <div className="sec-hd">
+      <div><div className="sec-title">Turnovers</div><div className="sec-sub">{turns.length} active turns</div></div>
+      <button onClick={()=>setEditTurn({})} className="ta-btn ta-primary">+ New Turn</button>
+    </div>
+    <div style={{display:"flex",gap:".35rem",flexWrap:"wrap",marginBottom:".85rem"}}>
+      {statuses.map(s=><button key={s} className={"pill"+(filter===s?" act":"")} onClick={()=>setFilter(s)}>{s}</button>)}
+    </div>
+    {filtered.map(t=><TicketCard key={t.id} item={{...t,wo:t.wo||t.workOrderNumber,type:"Turnover",tenant:t.vendor,tenantPhone:t.vendorPhone}} type="turn" vendors={vendors} onEdit={setEditTurn} onSMS={setSmsJob} onDispatch={setDispatchTurn} onVendor={setVendorTurn}/>)}
+  </div>;
+}
+
+// ─── DIRECTORY TAB ────────────────────────────────────────────
+function DirectoryTab({vendors,setVendors,clients,setClients,jobs}){
+  const[sub,setSub]=useState("vendors");
+  const[search,setSearch]=useState("");
+  const[editV,setEditV]=useState(null);
+  const[editC,setEditC]=useState(null);
+
+  const filteredV=vendors.filter(v=>!search||[v.name,v.trade,v.area].join(" ").toLowerCase().includes(search.toLowerCase()));
+  const filteredC=clients.filter(c=>!search||[c.name,c.contact,c.email].join(" ").toLowerCase().includes(search.toLowerCase()));
+
+  const STATUS_COLOR={"Active":"#059669","Onboarding":"#D97706","Prospect":"#64748B"};
+
+  return <div>
+    <div className="sec-hd">
+      <div><div className="sec-title">Directory</div><div className="sec-sub">{vendors.length} vendors · {clients.length} clients</div></div>
+    </div>
+    {/* Sub-tabs */}
+    <div style={{display:"flex",gap:".4rem",marginBottom:".85rem"}}>
+      <button className={"pill"+(sub==="vendors"?" act":"")} onClick={()=>setSub("vendors")}>🔧 Vendors ({vendors.length})</button>
+      <button className={"pill"+(sub==="clients"?" act":"")} onClick={()=>setSub("clients")}>🏢 Clients ({clients.length})</button>
+    </div>
+    <input className="search-bar" value={search} onChange={e=>setSearch(e.target.value)} placeholder={sub==="vendors"?"Search vendors, trades, area…":"Search clients, contacts…"}/>
+
+    {sub==="vendors"&&<div>
+      {filteredV.map(v=>{
+        const vJobs=jobs.filter(j=>(j.vendor||j.vendors)===v.name);
+        const color=VENDOR_COLORS[v.name]||"#2563EB";
+        return <div key={v.id} style={{background:"#fff",borderRadius:12,border:"1px solid #E2E8F0",padding:".85rem 1rem",marginBottom:".5rem",boxShadow:"0 1px 4px rgba(0,0,0,0.04)"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:".4rem"}}>
+            <div>
+              <div style={{display:"flex",alignItems:"center",gap:".5rem",marginBottom:".2rem"}}>
+                <div style={{width:10,height:10,borderRadius:"50%",background:color,flexShrink:0}}/>
+                <div style={{fontFamily:"Plus Jakarta Sans,sans-serif",fontWeight:800,fontSize:".9rem",color:"#0F172A"}}>{v.name}</div>
+                <span style={{fontSize:".65rem",fontWeight:700,color:STATUS_COLOR[v.status]||"#64748B",background:v.status==="Active"?"#D1FAE5":v.status==="Onboarding"?"#FEF3C7":"#F1F5F9",padding:"2px 7px",borderRadius:20}}>{v.status}</span>
+              </div>
+              <div style={{fontSize:".76rem",color:"#64748B",marginBottom:".15rem"}}>🛠️ {v.trade} · 📍 {v.area}</div>
+              <div style={{fontSize:".74rem",color:"#94A3B8"}}>📞 {v.phone}{v.email&&" · ✉️ "+v.email}</div>
+            </div>
+            <div style={{display:"flex",gap:".35rem",flexWrap:"wrap"}}>
+              <span style={{fontSize:".65rem",background:v.w9?"#D1FAE5":"#FEE2E2",color:v.w9?"#065F46":"#B91C1C",borderRadius:6,padding:"2px 7px",fontWeight:700}}>W9 {v.w9?"✓":"✗"}</span>
+              <span style={{fontSize:".65rem",background:v.coi?"#D1FAE5":"#FEE2E2",color:v.coi?"#065F46":"#B91C1C",borderRadius:6,padding:"2px 7px",fontWeight:700}}>COI {v.coi?"✓":"✗"}</span>
+              {vJobs.length>0&&<span style={{fontSize:".65rem",background:"#EFF6FF",color:"#1D4ED8",borderRadius:6,padding:"2px 7px",fontWeight:700}}>{vJobs.length} active job{vJobs.length>1?"s":""}</span>}
+            </div>
+          </div>
+          <div style={{display:"flex",gap:".4rem",marginTop:".55rem"}}>
+            <button onClick={()=>window.open("tel:"+v.phone)} className="ta-btn ta-blue" style={{fontSize:".72rem"}}>📞 Call</button>
+            <button onClick={()=>window.open("sms:"+v.phone)} className="ta-btn ta-green" style={{fontSize:".72rem"}}>💬 Text</button>
+            {vJobs.length>0&&<button onClick={()=>window.open(mapsUrl(vJobs.map(j=>j.address)),"_blank")} className="ta-btn ta-gray" style={{fontSize:".72rem"}}>🗺️ Their Route</button>}
+          </div>
+        </div>;
+      })}
+      {filteredV.length===0&&<div style={{textAlign:"center",padding:"2rem",color:"#94A3B8",fontSize:".82rem"}}>No vendors found.</div>}
+    </div>}
+
+    {sub==="clients"&&<div>
+      {filteredC.map(c=>{
+        const cJobs=[...jobs.filter(j=>(j.client||j.clientName)===c.name)];
+        return <div key={c.id} style={{background:"#fff",borderRadius:12,border:"1px solid #E2E8F0",padding:".85rem 1rem",marginBottom:".5rem",boxShadow:"0 1px 4px rgba(0,0,0,0.04)"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:".4rem",marginBottom:".4rem"}}>
+            <div>
+              <div style={{fontFamily:"Plus Jakarta Sans,sans-serif",fontWeight:800,fontSize:".9rem",color:"#0F172A",marginBottom:".15rem"}}>{c.name}</div>
+              <div style={{fontSize:".76rem",color:"#64748B"}}>👤 {c.contact} · 📞 {c.phone}</div>
+              {c.units>0&&<div style={{fontSize:".72rem",color:"#94A3B8",marginTop:".1rem"}}>🏠 {c.units} units</div>}
+            </div>
+            <div style={{display:"flex",flexDirection:"column",gap:".2rem",alignItems:"flex-end"}}>
+              {c.followUp&&<span style={{fontSize:".65rem",background:"#FEF9C3",color:"#92400E",borderRadius:6,padding:"2px 8px",fontWeight:700}}>Follow-up: {c.followUp}</span>}
+              {cJobs.length>0&&<span style={{fontSize:".65rem",background:"#EFF6FF",color:"#1D4ED8",borderRadius:6,padding:"2px 8px",fontWeight:700}}>{cJobs.length} active job{cJobs.length>1?"s":""}</span>}
+            </div>
+          </div>
+          {c.notes&&<div style={{fontSize:".72rem",color:"#64748B",marginBottom:".45rem",lineHeight:1.4}}>{c.notes}</div>}
+          <div style={{display:"flex",gap:".4rem",flexWrap:"wrap"}}>
+            <button onClick={()=>window.open("tel:"+c.phone)} className="ta-btn ta-blue" style={{fontSize:".72rem"}}>📞 Call</button>
+            {c.email&&<button onClick={()=>window.open("mailto:"+c.email)} className="ta-btn ta-gray" style={{fontSize:".72rem"}}>✉️ Email</button>}
+          </div>
+        </div>;
+      })}
+    </div>}
+  </div>;
+}
+
+// ─── SCHEDULE TAB ─────────────────────────────────────────────
+function ScheduleTab({jobs,turns,vendors}){
+  const allItems=[...jobs,...turns].filter(i=>i.date||i.dueDate||i.moveIn);
+  const byVendor={};
+  [...jobs,...turns].filter(i=>i.vendor||i.vendors).forEach(i=>{
+    const v=i.vendor||i.vendors;
+    if(!byVendor[v])byVendor[v]=[];
+    byVendor[v].push(i);
+  });
+  const today=new Date().toISOString().slice(0,10);
+  const todayItems=[...jobs,...turns].filter(i=>i.date===today||i.status==="In Progress"||i.status==="Vendor Assigned");
+  return <div>
+    <div className="sec-hd">
+      <div><div className="sec-title">Schedule</div><div className="sec-sub">Today: {todayItems.length} jobs · {Object.keys(byVendor).length} vendors active</div></div>
+    </div>
+    {/* TODAY */}
+    <div style={{background:"#fff",border:"1px solid #E2E8F0",borderRadius:14,padding:".85rem 1rem",marginBottom:".75rem"}}>
+      <div style={{fontFamily:"Plus Jakarta Sans,sans-serif",fontWeight:800,fontSize:".88rem",color:"#0F172A",marginBottom:".5rem"}}>📅 Today's Jobs</div>
+      {todayItems.length===0&&<div style={{fontSize:".78rem",color:"#94A3B8",fontStyle:"italic"}}>Nothing scheduled today.</div>}
+      {todayItems.map(j=>(
+        <div key={j.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:".4rem 0",borderBottom:"1px solid #F1F5F9",flexWrap:"wrap",gap:".3rem"}}>
+          <div>
+            <div style={{fontSize:".78rem",fontWeight:700,color:"#0F172A"}}>{j.wo||j.workOrderNumber} · {(j.address||"").split(",")[0]}</div>
+            <div style={{fontSize:".68rem",color:"#64748B"}}>{j.vendor||j.vendors||"Unassigned"} · {j.client||j.clientName}</div>
+          </div>
+          <StatusChip status={j.status}/>
+        </div>
+      ))}
+    </div>
+    {/* VENDOR ROUTES */}
+    <div style={{fontFamily:"Plus Jakarta Sans,sans-serif",fontWeight:800,fontSize:".88rem",color:"#0F172A",marginBottom:".5rem"}}>🗺️ Open Vendor Routes</div>
+    <div style={{display:"flex",flexDirection:"column",gap:".4rem",marginBottom:"1rem"}}>
+      {Object.entries(byVendor).map(([vName,vJobs])=>{
+        const color=VENDOR_COLORS[vName]||"#64748B";
+        return <div key={vName} style={{background:"#fff",borderRadius:10,border:"1.5px solid #E2E8F0",padding:".65rem .85rem",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:".4rem"}}>
+          <div>
+            <div style={{display:"flex",alignItems:"center",gap:".4rem"}}>
+              <div style={{width:10,height:10,borderRadius:"50%",background:color}}/>
+              <span style={{fontWeight:700,fontSize:".82rem",color:"#0F172A"}}>{vName}</span>
+              <span style={{fontSize:".65rem",color:"#64748B"}}>{vJobs.length} stop{vJobs.length>1?"s":""}</span>
+            </div>
+            <div style={{fontSize:".68rem",color:"#94A3B8",marginTop:".15rem"}}>
+              {vJobs.map(j=>(j.address||"").split(",")[0]).join(" → ")}
+            </div>
+          </div>
+          <button onClick={()=>window.open(mapsUrl(vJobs.map(j=>j.address)),"_blank")} className="ta-btn ta-blue" style={{fontSize:".72rem"}}>
+            🗺️ Open Route
+          </button>
+        </div>;
+      })}
+    </div>
+    {/* ALL ITEMS LIST */}
+    <div style={{fontFamily:"Plus Jakarta Sans,sans-serif",fontWeight:800,fontSize:".88rem",color:"#0F172A",marginBottom:".5rem"}}>📋 All Active</div>
+    {[...jobs,...turns].filter(i=>!["Completed","Paid"].includes(i.status)).map(i=>(
+      <div key={i.id} style={{background:"#fff",borderRadius:10,border:"1px solid #E2E8F0",padding:".6rem .85rem",marginBottom:".35rem",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:".3rem"}}>
+        <div>
+          <div style={{fontSize:".8rem",fontWeight:700,color:"#0F172A"}}>{i.wo||i.workOrderNumber} · {(i.address||"").split(",")[0]}</div>
+          <div style={{fontSize:".68rem",color:"#64748B"}}>{i.vendor||i.vendors||"⚠️ Unassigned"}</div>
+        </div>
+        <div style={{display:"flex",gap:".35rem",alignItems:"center"}}>
+          <StatusChip status={i.status}/>
+          <button onClick={()=>window.open(mapsUrl([i.address]),"_blank")} className="ta-btn ta-gray" style={{fontSize:".65rem",padding:"5px 8px"}}>📍</button>
+        </div>
+      </div>
+    ))}
+  </div>;
+}
+
+// ─── APP ──────────────────────────────────────────────────────
+function App(){
+  const[tab,setTab]=useState("home");
+  const[sideOpen,setSideOpen]=useState(false);
+  const[jobs,setJobs]=useState(DEMO.jobs);
+  const[turns,setTurns]=useState(DEMO.turns);
+  const[vendors,setVendors]=useState(DEMO.vendors);
+  const[clients,setClients]=useState(DEMO.clients);
+
+  const activeJobs=jobs.filter(j=>!["Completed","Paid"].includes(j.status)).length;
+  const activeTurns=turns.filter(t=>!["Completed","Paid"].includes(t.status)).length;
+  const unassigned=jobs.filter(j=>!j.vendor&&!["Completed","Paid"].includes(j.status)).length;
+
+  const NAVS=[
+    {id:"home",icon:"🏠",label:"Home"},
+    {id:"jobs",icon:"📋",label:"Jobs",count:activeJobs},
+    {id:"turns",icon:"🔄",label:"Turns",count:activeTurns},
+    {id:"directory",icon:"📁",label:"Directory"},
+    {id:"schedule",icon:"📅",label:"Schedule"},
+  ];
+  const TITLES={home:"Operations Center",jobs:"Work Orders",turns:"Turnovers",directory:"Directory",schedule:"Schedule"};
+  const goTo=id=>{setTab(id);setSideOpen(false);};
+
+  return <div className="layout">
+    <div className={"soverlay"+(sideOpen?" show":"")} onClick={()=>setSideOpen(false)}/>
+    <nav className={"sidebar"+(sideOpen?" open":"")}>
+      <div className="sidebar-logo">
+        <div className="sidebar-logo-mark">P</div>
+        <div><span className="sidebar-logo-name">ProManage</span><span className="sidebar-logo-sub">Powered by DRC</span></div>
+      </div>
+      <div className="sidebar-stats">
+        <div className="s-stat"><span className="s-stat-l">Active Jobs</span><span className="s-stat-v">{activeJobs}</span></div>
+        <div className="s-stat"><span className="s-stat-l">Turns</span><span className="s-stat-v">{activeTurns}</span></div>
+        <div className="s-stat"><span className="s-stat-l">Vendors</span><span className="s-stat-v">{vendors.length}</span></div>
+        {unassigned>0&&<div className="s-stat"><span className="s-stat-l" style={{color:"#EF4444"}}>Need Vendor</span><span className="s-stat-v" style={{color:"#EF4444"}}>{unassigned}</span></div>}
+      </div>
+      <div className="sidebar-section">Navigation</div>
+      {NAVS.map(n=><div key={n.id} className={"sidebar-item"+(tab===n.id?" act":"")} onClick={()=>goTo(n.id)}>
+        <span className="sidebar-icon">{n.icon}</span>
+        <span className="sidebar-label">{n.label}</span>
+        {n.count>0&&<span className="sidebar-badge">{n.count}</span>}
+      </div>)}
+      <div className="sidebar-bottom"><div className="sidebar-url">promanage.drcmaintenance.com</div></div>
+    </nav>
+
+    {/* MOBILE BOTTOM NAV */}
+    <div className="m-nav" style={{transform:sideOpen?"translateY(100%)":"translateY(0)"}}>
+      <div className="m-nav-inner">
+        {NAVS.map(n=><button key={n.id} className={"m-nav-btn"+(tab===n.id?" act":"")} onClick={()=>goTo(n.id)} style={{position:"relative"}}>
+          <span className="mi">{n.icon}</span>
+          <span className="ml" style={{color:tab===n.id?"#60A5FA":"#475569"}}>{n.label}</span>
+          {n.count>0&&<span className="m-badge">{n.count}</span>}
+        </button>)}
+      </div>
+    </div>
+
+    <div className="main-area">
+      <div className="topbar">
+        <div style={{display:"flex",alignItems:"center",gap:".6rem"}}>
+          <button className="hbtn" onClick={()=>setSideOpen(s=>!s)}>☰</button>
+          <span className="topbar-title">{TITLES[tab]}</span>
+        </div>
+        <div className="topbar-chips">
+          <div className="t-chip">Jobs <span>{activeJobs}</span></div>
+          <div className="t-chip">Turns <span>{activeTurns}</span></div>
+          {unassigned>0&&<div className="t-chip" style={{background:"#FEF2F2",borderColor:"#FECACA",color:"#B91C1C"}}>⚠️ <span style={{color:"#B91C1C"}}>{unassigned}</span></div>}
+          <div style={{background:"#FEF9C3",border:"1px solid #FDE047",borderRadius:20,padding:"3px 9px",fontSize:".6rem",color:"#92400E",fontWeight:700}}>✦ Demo</div>
+        </div>
+      </div>
+      <div className="content">
+        {tab==="home"&&<HomeTab jobs={jobs} turns={turns} vendors={vendors} clients={clients} onNav={goTo}/>}
+        {tab==="jobs"&&<JobsTab jobs={jobs} setJobs={setJobs} vendors={vendors} clients={clients}/>}
+        {tab==="turns"&&<TurnsTab turns={turns} setTurns={setTurns} vendors={vendors} clients={clients}/>}
+        {tab==="directory"&&<DirectoryTab vendors={vendors} setVendors={setVendors} clients={clients} setClients={setClients} jobs={[...jobs,...turns]}/>}
+        {tab==="schedule"&&<ScheduleTab jobs={jobs} turns={turns} vendors={vendors}/>}
+      </div>
+    </div>
+  </div>;
+}
+
+const root=ReactDOM.createRoot(document.getElementById("root"));
+root.render(<App/>);
+</script>
+</body>
+</html>
