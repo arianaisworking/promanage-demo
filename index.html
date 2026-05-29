@@ -701,12 +701,102 @@ function TurnsTab({turns,setTurns,vendors,clients}){
   </div>;
 }
 
+
+// ─── DEMO DOCUMENT UPLOADS / PROFILE MODALS ──────────────────
+function DemoDocTable({title,sub,docs,setDocs,slots=[]}){
+  const addDoc=(slot,file)=>{
+    const doc={id:Date.now().toString()+Math.random().toString(16).slice(2),type:slot||"Reference",name:file.name,size:Math.round(file.size/1024)+" KB",uploaded:new Date().toLocaleDateString()};
+    setDocs(prev=>[...prev,doc]);
+  };
+  const removeDoc=id=>setDocs(prev=>prev.filter(d=>d.id!==id));
+  const openDoc=d=>alert("Demo file preview: "+d.name+"\n\nThis demo stores documents only while this profile card is open. Production can connect this same table to Supabase/storage later.");
+  return <div style={{border:"1px solid #E2E8F0",borderRadius:12,overflow:"hidden",marginBottom:".75rem",background:"#fff"}}>
+    <div style={{background:"#F8FAFC",padding:".7rem .85rem",borderBottom:"1px solid #E2E8F0",display:"flex",justifyContent:"space-between",gap:".5rem",alignItems:"center",flexWrap:"wrap"}}>
+      <div><div style={{fontSize:".82rem",fontWeight:800,color:"#0F172A"}}>{title}</div>{sub&&<div style={{fontSize:".66rem",color:"#64748B",marginTop:"1px"}}>{sub}</div>}</div>
+      <span style={{fontSize:".65rem",fontWeight:800,color:"#1D4ED8",background:"#EFF6FF",border:"1px solid #BFDBFE",borderRadius:20,padding:"2px 8px"}}>{docs.length} file{docs.length===1?"":"s"}</span>
+    </div>
+    {slots.length>0&&<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(120px,1fr))",gap:".4rem",padding:".65rem .85rem",borderBottom:"1px solid #F1F5F9"}}>
+      {slots.map(slot=><label key={slot} style={{border:"1.5px dashed #BFDBFE",background:"#F8FAFC",borderRadius:9,padding:".55rem .45rem",textAlign:"center",fontSize:".68rem",fontWeight:800,color:"#1D4ED8",cursor:"pointer"}}>
+        + {slot}
+        <input type="file" style={{display:"none"}} onChange={e=>{const f=e.target.files&&e.target.files[0];if(f)addDoc(slot,f);e.target.value="";}}/>
+      </label>)}
+    </div>}
+    {slots.length===0&&<div style={{padding:".65rem .85rem",borderBottom:"1px solid #F1F5F9"}}>
+      <label style={{display:"block",border:"1.5px dashed #BFDBFE",background:"#F8FAFC",borderRadius:9,padding:".65rem",textAlign:"center",fontSize:".72rem",fontWeight:800,color:"#1D4ED8",cursor:"pointer"}}>
+        + Upload Reference Document
+        <input type="file" multiple style={{display:"none"}} onChange={e=>{Array.from(e.target.files||[]).forEach(f=>addDoc("Reference",f));e.target.value="";}}/>
+      </label>
+    </div>}
+    <div style={{overflowX:"auto"}}>
+      <table style={{width:"100%",borderCollapse:"collapse",fontSize:".72rem"}}>
+        <thead><tr style={{background:"#F8FAFC",color:"#64748B",textAlign:"left"}}><th style={{padding:".45rem .65rem"}}>Type</th><th style={{padding:".45rem .65rem"}}>Document</th><th style={{padding:".45rem .65rem"}}>Uploaded</th><th style={{padding:".45rem .65rem"}}></th></tr></thead>
+        <tbody>
+          {docs.length===0&&<tr><td colSpan="4" style={{padding:".85rem",textAlign:"center",color:"#94A3B8",fontStyle:"italic"}}>No documents uploaded in this demo session.</td></tr>}
+          {docs.map(d=><tr key={d.id} style={{borderTop:"1px solid #F1F5F9"}}>
+            <td style={{padding:".5rem .65rem",fontWeight:800,color:"#334155"}}>{d.type}</td>
+            <td style={{padding:".5rem .65rem",color:"#0F172A"}}>📎 {d.name}<div style={{fontSize:".6rem",color:"#94A3B8"}}>{d.size}</div></td>
+            <td style={{padding:".5rem .65rem",color:"#64748B"}}>{d.uploaded}</td>
+            <td style={{padding:".5rem .65rem",whiteSpace:"nowrap"}}><button onClick={()=>openDoc(d)} className="ta-btn ta-blue" style={{fontSize:".62rem",padding:"4px 7px",display:"inline-flex"}}>Open</button><button onClick={()=>removeDoc(d.id)} className="ta-btn ta-red" style={{fontSize:".62rem",padding:"4px 7px",display:"inline-flex",marginLeft:".25rem"}}>Remove</button></td>
+          </tr>)}
+        </tbody>
+      </table>
+    </div>
+  </div>;
+}
+
+function ClientProfileModal({client,jobs,onClose}){
+  const[docs,setDocs]=useState([
+    {id:"msa",type:"MSA",name:"Master Service Agreement.pdf",size:"248 KB",uploaded:"Demo"},
+    {id:"contacts",type:"Contact Page",name:"Client Contact Sheet.pdf",size:"96 KB",uploaded:"Demo"}
+  ]);
+  const cJobs=jobs.filter(j=>(j.client||j.clientName)===client.name);
+  return <Modal title={"🏢 "+client.name} onClose={onClose}>
+    <div style={{background:"#F8FAFC",border:"1px solid #E2E8F0",borderRadius:12,padding:".85rem",marginBottom:".75rem"}}>
+      <div style={{fontWeight:800,fontSize:".95rem",color:"#0F172A",marginBottom:".25rem"}}>{client.contact}</div>
+      <div style={{fontSize:".75rem",color:"#64748B",lineHeight:1.7}}>📞 {client.phone}<br/>✉️ {client.email||"No email on file"}<br/>🏠 {client.units||0} units · {cJobs.length} active job{cJobs.length===1?"":"s"}</div>
+      {client.notes&&<div style={{marginTop:".55rem",fontSize:".73rem",color:"#334155",lineHeight:1.45}}>{client.notes}</div>}
+    </div>
+    <DemoDocTable title="Client Documents" sub="Static demo uploads: MSA, references, contact pages, pricing sheets" docs={docs} setDocs={setDocs} slots={["MSA","References","Contact Page","Pricing Sheet"]}/>
+    <Accordion title="📋 Active Client Work" sub={cJobs.length+" linked record"+(cJobs.length===1?"":"s")} open>
+      {cJobs.length===0&&<div style={{fontSize:".75rem",color:"#94A3B8",fontStyle:"italic"}}>No active work orders tied to this client.</div>}
+      {cJobs.map(j=><div key={j.id} style={{padding:".45rem 0",borderBottom:"1px solid #F1F5F9"}}><strong style={{fontSize:".76rem",color:"#0F172A"}}>{j.wo}</strong><div style={{fontSize:".68rem",color:"#64748B"}}>{j.address} · {j.status}</div></div>)}
+    </Accordion>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:".5rem"}}><button onClick={()=>window.open("tel:"+client.phone)} className="ta-btn ta-blue" style={{justifyContent:"center"}}>📞 Call</button>{client.email&&<button onClick={()=>window.open("mailto:"+client.email)} className="ta-btn ta-gray" style={{justifyContent:"center"}}>✉️ Email</button>}</div>
+  </Modal>;
+}
+
+function VendorProfileModal({vendor,jobs,onClose}){
+  const[onboarding,setOnboarding]=useState([
+    {id:"w9",type:"W9",name:vendor.name+" W9.pdf",size:"140 KB",uploaded:"Demo"},
+    {id:"coi",type:"COI",name:vendor.name+" COI.pdf",size:"212 KB",uploaded:"Demo"}
+  ]);
+  const[refs,setRefs]=useState([{id:"ref1",type:"Reference",name:"Trade References.pdf",size:"88 KB",uploaded:"Demo"}]);
+  const vJobs=jobs.filter(j=>(j.vendor||j.vendors)===vendor.name);
+  const color=VENDOR_COLORS[vendor.name]||"#2563EB";
+  return <Modal title={"👷 "+vendor.name} onClose={onClose}>
+    <div style={{background:"#F8FAFC",border:"2px solid "+color+"33",borderRadius:12,padding:".85rem",marginBottom:".75rem"}}>
+      <div style={{display:"flex",alignItems:"center",gap:".65rem"}}><div style={{width:42,height:42,borderRadius:10,background:color,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"1.2rem"}}>👷</div><div><div style={{fontWeight:800,fontSize:".95rem",color:"#0F172A"}}>{vendor.name}</div><div style={{fontSize:".73rem",color:"#64748B"}}>🛠️ {vendor.trade} · 📍 {vendor.area}</div></div></div>
+      <div style={{fontSize:".74rem",color:"#334155",lineHeight:1.7,marginTop:".6rem"}}>📞 {vendor.phone}<br/>✉️ {vendor.email||"No email on file"}<br/>Status: <strong>{vendor.status}</strong> · {vJobs.length} active job{vJobs.length===1?"":"s"}</div>
+    </div>
+    <DemoDocTable title="Onboarding Documents" sub="Required vendor compliance packet" docs={onboarding} setDocs={setOnboarding} slots={["W9","COI","MSA","ACH"]}/>
+    <DemoDocTable title="Reference Documents" sub="Licenses, photos, certificates, trade references, notes" docs={refs} setDocs={setRefs}/>
+    <Accordion title="🗺️ Vendor Route / Linked Jobs" sub={vJobs.length+" active stop"+(vJobs.length===1?"":"s")} open>
+      {vJobs.length===0&&<div style={{fontSize:".75rem",color:"#94A3B8",fontStyle:"italic"}}>No active jobs assigned to this vendor.</div>}
+      {vJobs.map(j=><div key={j.id} style={{padding:".45rem 0",borderBottom:"1px solid #F1F5F9"}}><strong style={{fontSize:".76rem",color:"#0F172A"}}>{j.wo||j.workOrderNumber}</strong><div style={{fontSize:".68rem",color:"#64748B"}}>{j.address} · {j.status}</div></div>)}
+      {vJobs.length>0&&<button onClick={()=>window.open(mapsUrl(vJobs.map(j=>j.address)),"_blank")} className="ta-btn ta-blue" style={{marginTop:".5rem",fontSize:".72rem"}}>🗺️ Open Route</button>}
+    </Accordion>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:".5rem"}}><button onClick={()=>window.open("tel:"+vendor.phone)} className="ta-btn ta-blue" style={{justifyContent:"center"}}>📞 Call</button><button onClick={()=>window.open("sms:"+vendor.phone)} className="ta-btn ta-green" style={{justifyContent:"center"}}>💬 Text</button></div>
+  </Modal>;
+}
+
 // ─── DIRECTORY TAB ────────────────────────────────────────────
 function DirectoryTab({vendors,setVendors,clients,setClients,jobs}){
   const[sub,setSub]=useState("vendors");
   const[search,setSearch]=useState("");
   const[editV,setEditV]=useState(null);
   const[editC,setEditC]=useState(null);
+  const[selectedVendor,setSelectedVendor]=useState(null);
+  const[selectedClient,setSelectedClient]=useState(null);
 
   const filteredV=vendors.filter(v=>!search||[v.name,v.trade,v.area].join(" ").toLowerCase().includes(search.toLowerCase()));
   const filteredC=clients.filter(c=>!search||[c.name,c.contact,c.email].join(" ").toLowerCase().includes(search.toLowerCase()));
@@ -714,6 +804,8 @@ function DirectoryTab({vendors,setVendors,clients,setClients,jobs}){
   const STATUS_COLOR={"Active":"#059669","Onboarding":"#D97706","Prospect":"#64748B"};
 
   return <div>
+    {selectedVendor&&<VendorProfileModal vendor={selectedVendor} jobs={jobs} onClose={()=>setSelectedVendor(null)}/>}
+    {selectedClient&&<ClientProfileModal client={selectedClient} jobs={jobs} onClose={()=>setSelectedClient(null)}/>}
     <div className="sec-hd">
       <div><div className="sec-title">Directory</div><div className="sec-sub">{vendors.length} vendors · {clients.length} clients</div></div>
     </div>
@@ -728,7 +820,7 @@ function DirectoryTab({vendors,setVendors,clients,setClients,jobs}){
       {filteredV.map(v=>{
         const vJobs=jobs.filter(j=>(j.vendor||j.vendors)===v.name);
         const color=VENDOR_COLORS[v.name]||"#2563EB";
-        return <div key={v.id} style={{background:"#fff",borderRadius:12,border:"1px solid #E2E8F0",padding:".85rem 1rem",marginBottom:".5rem",boxShadow:"0 1px 4px rgba(0,0,0,0.04)"}}>
+        return <div key={v.id} onClick={()=>setSelectedVendor(v)} style={{background:"#fff",borderRadius:12,border:"1px solid #E2E8F0",padding:".85rem 1rem",marginBottom:".5rem",boxShadow:"0 1px 4px rgba(0,0,0,0.04)",cursor:"pointer"}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:".4rem"}}>
             <div>
               <div style={{display:"flex",alignItems:"center",gap:".5rem",marginBottom:".2rem"}}>
@@ -746,9 +838,10 @@ function DirectoryTab({vendors,setVendors,clients,setClients,jobs}){
             </div>
           </div>
           <div style={{display:"flex",gap:".4rem",marginTop:".55rem"}}>
-            <button onClick={()=>window.open("tel:"+v.phone)} className="ta-btn ta-blue" style={{fontSize:".72rem"}}>📞 Call</button>
-            <button onClick={()=>window.open("sms:"+v.phone)} className="ta-btn ta-green" style={{fontSize:".72rem"}}>💬 Text</button>
-            {vJobs.length>0&&<button onClick={()=>window.open(mapsUrl(vJobs.map(j=>j.address)),"_blank")} className="ta-btn ta-gray" style={{fontSize:".72rem"}}>🗺️ Their Route</button>}
+            <button onClick={e=>{e.stopPropagation();window.open("tel:"+v.phone)}} className="ta-btn ta-blue" style={{fontSize:".72rem"}}>📞 Call</button>
+            <button onClick={e=>{e.stopPropagation();window.open("sms:"+v.phone)}} className="ta-btn ta-green" style={{fontSize:".72rem"}}>💬 Text</button>
+            <button onClick={e=>{e.stopPropagation();setSelectedVendor(v)}} className="ta-btn ta-purple" style={{fontSize:".72rem"}}>📂 Open Card</button>
+            {vJobs.length>0&&<button onClick={e=>{e.stopPropagation();window.open(mapsUrl(vJobs.map(j=>j.address)),"_blank")}} className="ta-btn ta-gray" style={{fontSize:".72rem"}}>🗺️ Their Route</button>}
           </div>
         </div>;
       })}
@@ -758,7 +851,7 @@ function DirectoryTab({vendors,setVendors,clients,setClients,jobs}){
     {sub==="clients"&&<div>
       {filteredC.map(c=>{
         const cJobs=[...jobs.filter(j=>(j.client||j.clientName)===c.name)];
-        return <div key={c.id} style={{background:"#fff",borderRadius:12,border:"1px solid #E2E8F0",padding:".85rem 1rem",marginBottom:".5rem",boxShadow:"0 1px 4px rgba(0,0,0,0.04)"}}>
+        return <div key={c.id} onClick={()=>setSelectedClient(c)} style={{background:"#fff",borderRadius:12,border:"1px solid #E2E8F0",padding:".85rem 1rem",marginBottom:".5rem",boxShadow:"0 1px 4px rgba(0,0,0,0.04)",cursor:"pointer"}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:".4rem",marginBottom:".4rem"}}>
             <div>
               <div style={{fontFamily:"Plus Jakarta Sans,sans-serif",fontWeight:800,fontSize:".9rem",color:"#0F172A",marginBottom:".15rem"}}>{c.name}</div>
@@ -772,8 +865,9 @@ function DirectoryTab({vendors,setVendors,clients,setClients,jobs}){
           </div>
           {c.notes&&<div style={{fontSize:".72rem",color:"#64748B",marginBottom:".45rem",lineHeight:1.4}}>{c.notes}</div>}
           <div style={{display:"flex",gap:".4rem",flexWrap:"wrap"}}>
-            <button onClick={()=>window.open("tel:"+c.phone)} className="ta-btn ta-blue" style={{fontSize:".72rem"}}>📞 Call</button>
-            {c.email&&<button onClick={()=>window.open("mailto:"+c.email)} className="ta-btn ta-gray" style={{fontSize:".72rem"}}>✉️ Email</button>}
+            <button onClick={e=>{e.stopPropagation();window.open("tel:"+c.phone)}} className="ta-btn ta-blue" style={{fontSize:".72rem"}}>📞 Call</button>
+            <button onClick={e=>{e.stopPropagation();setSelectedClient(c)}} className="ta-btn ta-purple" style={{fontSize:".72rem"}}>📂 Open Card</button>
+            {c.email&&<button onClick={e=>{e.stopPropagation();window.open("mailto:"+c.email)}} className="ta-btn ta-gray" style={{fontSize:".72rem"}}>✉️ Email</button>}
           </div>
         </div>;
       })}
